@@ -1,0 +1,100 @@
+---
+title: "5207 assignment"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+  word_document: default
+date: "2023-11-11"
+editor_options:
+  markdown:
+    wrap: 72
+---
+```{r setup}
+options(repos = c(CRAN = "https://cloud.r-project.org/"))
+```
+
+1.  install packages
+
+```{r}
+library(dplyr)
+library(summarytools)
+library(ggplot2)
+```
+
+read data set
+
+```{r}
+data <- read.csv("C:/Users/Administrator/Desktop/5207/Rateprof.csv")
+```
+
+3.  descriptive statistics
+
+```{r}
+summary(data)
+str(data)
+
+barplot_vars <- c("gender", "discipline", "dept","pepper") 
+               for (var in barplot_vars) {
+                    p <- ggplot(data, aes(x = !!sym(var))) +
+                         geom_bar() +
+                         ggtitle(paste("Bar Plot of", var)) 
+                    print(p)
+}
+
+histogram_vars <- c("numYears", "numRaters", "numCourses","quality",
+                    "helpfulness","clarity", "easiness", "raterInterest",
+                    "sdQuality","sdHelpfulness", "sdClarity", "sdEasiness", 
+                    "sdRaterInterest")
+                for (var in histogram_vars) { 
+                     p <- ggplot(data, aes(x = !!rlang::sym(var))) + 
+                          geom_histogram(binwidth = 1) +
+                          ggtitle(paste("Histogram of", var)) 
+                     print(p) 
+}
+```
+
+Data analysis process
+
+Q1:How are the five ratings related? Describe
+
+```{r}
+matrix <- cor(data[, c("quality","helpfulness", "clarity", "easiness", 
+                       "raterInterest")]) 
+print(matrix)
+```
+
+perform heat map to virtualize correlations
+
+```{r}
+install.packages("pheatmap")
+library(pheatmap)
+pheatmap(matrix)
+```
+
+Build Linear Regression Model and check 4 basic assumption According to
+the plot below, LM meets all assupmtions, including linearity,
+independence of residuals, normality of residuals and homoscedasticity.
+For linearity,
+
+```{r}
+pairs(data[, c("quality", "helpfulness", "clarity", "easiness", "raterInterest")]) 
+data$gender <- as.factor(data$gender) 
+data$discipline <- as.factor(data$discipline) 
+data$pepper <- as.factor(data$pepper)
+model <- lm(quality ~ gender + numYears + discipline + easiness + 
+                      raterInterest + pepper,
+            data = data) 
+summary(model) 
+par(mfrow = c(2, 2)) 
+plot(model)
+
+plot(fitted(model), sqrt(abs(residuals(model))))
+abline(h = 0, col = "red")
+```
+
+ANOVA to check the effects of predictors
+
+```{r}
+anova(model)
+```
